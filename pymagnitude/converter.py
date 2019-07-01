@@ -115,7 +115,8 @@ def convert(input_file_path, output_file_path=None,
     input_is_binary = input_file_path.endswith('.bin')
     input_is_hdf5 = input_file_path.endswith('.hdf5')
     input_is_hdf5_weights = input_file_path.endswith('_weights.hdf5')
-    if not input_is_text and not input_is_binary and not input_is_hdf5:
+    input_is_w2v = input_file_path.endswith(".w2v")
+    if not input_is_text and not input_is_binary and not input_is_hdf5 and not input_is_w2v:
         exit("The input file path must be `.txt`, `.bin`, `.vec`, or `.hdf5`")
     if not output_file_path.endswith('.magnitude'):
         exit("The output file path file path must be `.magnitude`")
@@ -250,6 +251,16 @@ def convert(input_file_path, output_file_path=None,
                     imap(
                         lambda kv: kv[0], kv_gen_1), 1000)))
         keyed_vectors.index2word = imap(lambda kv: kv[0], kv_gen_2)
+    elif input_is_w2v:
+        try:
+            from gensim.models import KeyedVectors
+        except ImportError:
+            raise ImportError("You need gensim >= 3.3.0 installed with pip \
+                (`pip install gensim`) to convert binary files.")
+        keyed_vectors = KeyedVectors.load(
+            input_file_path).wv
+        number_of_keys = len(keyed_vectors.vectors)
+        dimensions = len(keyed_vectors.vectors[0])  
     else:
         class KeyedVectors:
             pass
